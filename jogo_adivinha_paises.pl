@@ -5,6 +5,9 @@
 % Importa o módulo de dados dos países
 :- use_module(paises_dados).
 
+% Importa o módulo random para seleção aleatória da primeira pergunta
+:- use_module(library(random)).
+
 % Variáveis dinâmicas para controle do jogo
 :- dynamic paises_possiveis/1.
 :- dynamic perguntas_feitas/1.
@@ -139,12 +142,7 @@ clear_console :-
     ).
 
 % Menu principal do jogo
-menu_principal :-
-    inicializa_estatisticas,
-    menu_loop.
-
-% Novo predicado jogo como ponto de entrada
-jogo :-
+jogar :-
     inicializa_estatisticas,
     menu_loop.
 
@@ -364,8 +362,15 @@ melhor_pergunta(Paises, MelhorPergunta) :-
              sub_atom(P, 0, 12, _, expectativa_);
              sub_atom(P, 0, 5, _, area_))
         ), PerguntasIniciais),
-        % Escolha "aleatória" (a primeira da lista, mas em uma implementação real seria random)
-        (PerguntasIniciais = [MelhorPergunta|_] -> true ; MelhorPergunta = continente_europa)
+        % Escolha aleatória usando random/3
+        length(PerguntasIniciais, NumPerguntas),
+        (NumPerguntas > 0 -> 
+            random(0, NumPerguntas, Indice),
+            nth0(Indice, PerguntasIniciais, MelhorPergunta)
+        ; 
+            % Caso não tenha encontrado perguntas iniciais (situação improvável)
+            MelhorPergunta = continente_europa
+        )
     % Se estamos na metade final das perguntas, permite perguntas sobre letras
     ; Tentativas =< 10 -> 
         % Avalia todas as perguntas e escolhe a melhor
@@ -545,7 +550,6 @@ formata_pergunta(fala_arabe, 'A lingua oficial do pais e o arabe? ').
 formata_pergunta(fala_portugues, 'A lingua oficial do pais e o portugues? ').
 formata_pergunta(fala_russo, 'A lingua oficial do pais e o russo? ').
 formata_pergunta(fala_alemao, 'A lingua oficial do pais e o alemao? ').
-% Formatos para os novos idiomas
 formata_pergunta(fala_italiano, 'A lingua oficial do pais e o italiano? ').
 formata_pergunta(fala_chines, 'A lingua oficial do pais e o chines? ').
 formata_pergunta(fala_japones, 'A lingua oficial do pais e o japones? ').
@@ -569,7 +573,6 @@ formata_pergunta(pib_baixo, 'O pais tem um PIB baixo (menos de 10 bilhoes de dol
 formata_pergunta(natalidade_alta, 'O pais tem uma taxa de natalidade alta (mais de 4 filhos por mulher)? ').
 formata_pergunta(natalidade_media, 'O pais tem uma taxa de natalidade media (entre 2 e 4 filhos por mulher)? ').
 formata_pergunta(natalidade_baixa, 'O pais tem uma taxa de natalidade baixa (menos de 2 filhos por mulher)? ').
-% Formatos para perguntas sobre letras e tamanho de nome
 formata_pergunta(comeca_com_a, 'O nome do pais comeca com a letra A? ').
 formata_pergunta(comeca_com_b, 'O nome do pais comeca com a letra B? ').
 formata_pergunta(comeca_com_c, 'O nome do pais comeca com a letra C? ').
@@ -731,19 +734,21 @@ aplica_filtro_nao(Pergunta, Paises, PaisesNovos) :-
         exclude(nome_longo, Paises, PaisesNovos)
     ).
 
-% Escolhe um país aleatório da lista de países restantes usando um método alternativo
+% Escolhe um país aleatório da lista de países restantes
 escolhe_pais_aleatorio([], _) :- 
     write('Erro: Nao ha paises disponiveis para selecao aleatoria!'), nl,
     fail.
 escolhe_pais_aleatorio([Pais], Pais) :- !.  % Se só há um país, retorna ele
 escolhe_pais_aleatorio(Paises, PaisEscolhido) :- 
-    % Método simple: usa o primeiro país da lista
-    % Em um ambiente sem restrições, usaríamos random/3 aqui
-    Paises = [PaisEscolhido|_].
+    % Método que realmente seleciona um país aleatório usando random/3
+    length(Paises, NumPaises),
+    random(0, NumPaises, Indice),
+    nth0(Indice, Paises, PaisEscolhido).
 
 % Ponto de entrada do programa
-main :- jogo.
-% Inicializa o jogo
+main :- 
+    inicializa_estatisticas,
+    adivinha_pais.
 
 % Inicialização - define que o programa não inicia automaticamente
 :- initialization(main, program).
