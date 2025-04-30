@@ -351,6 +351,21 @@ melhor_pergunta(Paises, MelhorPergunta) :-
     tentativas_restantes(Tentativas),
     perguntas_ineficientes(PI),
     
+    % Calculando a metade das tentativas baseado na dificuldade
+    nivel_dificuldade(Nivel),
+    (Nivel = facil ->
+        TentativasTotal = 20,
+        MetadeTentativas is TentativasTotal / 2
+    ; Nivel = medio ->
+        TentativasTotal = 15,
+        MetadeTentativas is TentativasTotal / 2
+    ; Nivel = dificil ->
+        TentativasTotal = 10,
+        MetadeTentativas is TentativasTotal / 2
+    ; % Padrão
+        MetadeTentativas = 7
+    ),
+    
     % Se for a primeira pergunta, escolhe uma pergunta aleatória
     (Feitas = [] -> 
         % Filtramos apenas perguntas básicas para a primeira pergunta
@@ -372,7 +387,7 @@ melhor_pergunta(Paises, MelhorPergunta) :-
             MelhorPergunta = continente_europa
         )
     % Se estamos na metade final das perguntas, permite perguntas sobre letras
-    ; Tentativas =< 10 -> 
+    ; Tentativas =< MetadeTentativas -> 
         % Avalia todas as perguntas e escolhe a melhor
         melhor_pergunta_aux(PergsNaoFeitas, Paises, MelhorPergunta)
     % Se tivermos muitas perguntas ineficientes consecutivas, também permitir perguntas sobre letras
